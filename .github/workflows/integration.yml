@@ -18,7 +18,7 @@ jobs:
       - name: Self test
         id: selftest
 
-        uses: ribtoks/parent-issue-action@master
+        uses: ribtoks/parent-issue-update@master
         with:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
