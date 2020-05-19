@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	errParentNotFound = errors.New("parent issue not found")
+	errParentNotFound   = errors.New("parent issue not found")
+	errWrongIssueSyntax = errors.New("wrong issue syntax")
 )
 
 type tree struct {
@@ -28,7 +29,10 @@ func isParentIssueMark(m string) bool {
 
 func parseIssueNumber(s string) (int, error) {
 	s = strings.TrimSpace(s)
-	return strconv.Atoi(s)
+	if s[0] != '#' {
+		return -1, errWrongIssueSyntax
+	}
+	return strconv.Atoi(s[1:])
 }
 
 func parseParentIssue(i *github.Issue) (int, error) {
