@@ -8,6 +8,12 @@ inputs:
   DRY_RUN:
     description: "Do not update real issues"
     default: ""
+  SYNC_DAYS:
+    description: "Update issues changed in the last sync days"
+    default: "1"
+  MAX_LEVELS:
+    description: "Show max levels of nested issues in parent"
+    default: "0"
 
 outputs:
 

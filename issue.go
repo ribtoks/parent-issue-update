@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+
+	"github.com/google/go-github/v31/github"
 )
 
 type IssueStatus int
@@ -50,4 +52,18 @@ func (i *Issue) FormatTitle(spaces int) string {
 	}
 
 	return fmt.Sprintf("%s- [%s] %s #%v", string(prefix), status, i.Title, i.ID)
+}
+
+func NewIssue(i *github.Issue) *Issue {
+	issue := &Issue{
+		ID:     i.GetNumber(),
+		Title:  i.GetTitle(),
+		Body:   i.GetBody(),
+		Status: StatusOpened,
+	}
+
+	if i.GetState() == "closed" {
+		issue.Status = StatusClosed
+	}
+	return issue
 }
