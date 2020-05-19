@@ -1,0 +1,21 @@
+name: "Parent Issue updater"
+description: "Create epics from GitHub Issues using parent-child links"
+author: "Taras Kushnir"
+inputs:
+  TOKEN:
+    description: "Github token"
+    default: ""
+  DRY_RUN:
+    description: "Do not update real issues"
+    default: ""
+
+outputs:
+
+runs:
+  using: "docker"
+  image: "Dockerfile"
+
+branding:
+  icon: "link"
+  color: "blue"
+

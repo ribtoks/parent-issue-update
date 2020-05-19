@@ -1,0 +1,27 @@
+name: Integration Test
+on:
+  push:
+    branches:
+    - '*'
+    paths-ignore:
+    - 'docs/**'
+    - '**/README.md'
+    tags-ignore:
+    - '*.*'
+  pull_request:
+    types: [opened, reopened]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Self test
+        id: selftest
+
+        uses: ribtoks/parent-issue-action@master
+        with:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: 1
+      - name: Check outputs
+        run: |
+          test "${{ steps.selftest.outputs.updatedIssues }}" == "1"
