@@ -5,6 +5,9 @@ inputs:
   TOKEN:
     description: "Github token"
     default: ""
+  REPO:
+    description: "Github repository"
+    default: ""
   DRY_RUN:
     description: "Do not update real issues"
     default: ""

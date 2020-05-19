@@ -54,7 +54,10 @@ func parseParentIssue(i *github.Issue) (int, error) {
 }
 
 func NewTree(issues []*github.Issue) *tree {
-	t := &tree{}
+	t := &tree{
+		nodes:  make(map[int]map[int]bool),
+		issues: make(map[int]*Issue),
+	}
 	for _, i := range issues {
 		child := i.GetNumber()
 		t.issues[child] = NewIssue(i)
@@ -65,11 +68,19 @@ func NewTree(issues []*github.Issue) *tree {
 			continue
 		}
 
-		t.nodes[parent][child] = true
+		t.addNode(parent, child)
 		log.Printf("Added issues link. parent=%v child=%v", parent, child)
 	}
 
 	return t
+}
+
+func (t *tree) addNode(parent, child int) {
+	if _, ok := t.nodes[parent]; !ok {
+		t.nodes[parent] = make(map[int]bool)
+	}
+
+	t.nodes[parent][child] = true
 }
 
 func (t *tree) Issues() []*Issue {
