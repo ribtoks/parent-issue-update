@@ -177,6 +177,7 @@ func main() {
 
 	log.Printf("Waiting for issue update to finish...")
 	svc.wg.Wait()
+	log.Printf("Update finished.")
 
 	if count > 0 {
 		fmt.Println(fmt.Sprintf(`::set-output name=updatedIssues::%s`, "1"))
