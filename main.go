@@ -100,7 +100,7 @@ func (s *service) fetchGithubIssues() ([]*github.Issue, error) {
 
 		opt.Page = resp.NextPage
 	}
-	log.Printf("Fetched github todo issues. count=%v", len(allIssues))
+	log.Printf("Fetched github issues. count=%v", len(allIssues))
 
 	return allIssues, nil
 }
@@ -125,7 +125,7 @@ func (s *service) fetchIssuesByID(issues []int) ([]*github.Issue, error) {
 		}(i)
 	}
 
-	log.Printf("Waiting for issues to be fetched by ID")
+	log.Printf("Waiting for issues to be fetched by ID...")
 	wg.Wait()
 
 	return allIssues, nil
@@ -160,7 +160,10 @@ func (s *service) updateIssue(i *Issue, changelog []string) {
 
 	if err != nil {
 		log.Printf("Error while editing an issue. issue=%v err=%v", i.ID, err)
+		return
 	}
+
+	log.Printf("Updated an issue. issue=%v", i.ID)
 
 	if s.env.addChangelog && len(changelog) > 0 {
 		body := createComment(changelog)
@@ -170,10 +173,11 @@ func (s *service) updateIssue(i *Issue, changelog []string) {
 		_, _, err = s.client.Issues.CreateComment(s.ctx, s.env.owner, s.env.repo, i.ID, comment)
 		if err != nil {
 			log.Printf("Error while adding a comment. issue=%v err=%v", i.ID, err)
+			return
 		}
-	}
 
-	log.Printf("Updated issue. issue=%v", i.ID)
+		log.Printf("Added a comment to the issue. issue=%v", i.ID)
+	}
 }
 
 func main() {
@@ -240,4 +244,7 @@ func main() {
 	svc.wg.Wait()
 
 	fmt.Println(fmt.Sprintf(`::set-output name=updatedIssues::%s`, "1"))
+
+	// help logger to flush
+	time.Sleep(1 * time.Second)
 }

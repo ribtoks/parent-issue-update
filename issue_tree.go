@@ -71,7 +71,7 @@ func NewTree(issues []*github.Issue) *tree {
 
 		parent, err := parseParentIssue(i)
 		if err != nil {
-			log.Printf("Failed to parse parent issue. issue=%v err=%v", i.GetID(), err)
+			log.Printf("Failed to parse parent issue. issue=%v err=%v", i.GetNumber(), err)
 			continue
 		}
 
