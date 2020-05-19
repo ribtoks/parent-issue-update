@@ -155,6 +155,8 @@ func main() {
 		MaxLevels: svc.env.maxLevels,
 	}
 
+	count := 0
+
 	for _, i := range issues {
 		oldBody := i.Body
 		err := e.Update(i)
@@ -163,17 +165,20 @@ func main() {
 			continue
 		}
 
-		if oldBody != i.Body {
+		if oldBody == i.Body {
 			log.Printf("Skipping identical issue body. issue=%v", i.ID)
 			continue
 		}
 
+		count++
 		svc.wg.Add(1)
 		go svc.updateIssue(i)
 	}
 
-	log.Printf("Waiting for issue update to finish")
+	log.Printf("Waiting for issue update to finish...")
 	svc.wg.Wait()
 
-	fmt.Println(fmt.Sprintf(`::set-output name=updatedIssues::%s`, "1"))
+	if count > 0 {
+		fmt.Println(fmt.Sprintf(`::set-output name=updatedIssues::%s`, "1"))
+	}
 }
