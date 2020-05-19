@@ -16,6 +16,7 @@ var (
 )
 
 type tree struct {
+	// map from parent to child issue
 	nodes  map[int]map[int]bool
 	issues map[int]*Issue
 }
@@ -88,10 +89,16 @@ func (t *tree) addNode(parent, child int) {
 }
 
 func (t *tree) Issues() []*Issue {
+	log.Printf("Making list out of issue tree")
 	issues := make([]*Issue, 0, len(t.nodes))
 	for p, cm := range t.nodes {
+		log.Printf("Generating children list. parent=%v children_count=%v", p, len(cm))
 		children := make([]*Issue, 0, len(cm))
 		for i, _ := range cm {
+			if _, ok := t.issues[i]; !ok {
+				log.Printf("Child issue is not found. issue=%v", i)
+				continue
+			}
 			children = append(children, t.issues[i])
 		}
 

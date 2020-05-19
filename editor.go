@@ -143,6 +143,8 @@ func (e *Editor) Update(i *Issue) error {
 		return nil
 	}
 
+	log.Printf("Editing issue body. issue=%v children=%v", i.ID, len(i.Children))
+
 	if len(i.Body) == 0 {
 		return e.appendNewSection(i)
 	}
