@@ -45,8 +45,9 @@ This action was designed to run on schedule instead of per issue update event in
 | `DRY_RUN`  | Do not update real real issues (used for debugging) |
 | `SYNC_DAYS` | Update parent issues for issue changes in the last `SYNC_DAYS` (defaults to `1`) |
 | `MAX_LEVELS` | Keep this deep hierarchy in parent issues (defaults to `0` - unlimited)
+| `ADD_CHANGELOG`  | Add a short summary to parent issue with the update changelog |
 
-Flag values like `DRY_RUN` use values `1`/`true`/`y` as ON switch.
+Flag values like `DRY_RUN` or `ADD_CHANGELOG` use values `1`/`true`/`y` as ON switch.
 
 If you want to run this action every week, you need to update `SYNC_DAYS` to `7` and update cron job schedule in Action syntax to be `0 0 0 * *` (use [crontab guru](https://crontab.guru/) for help).
 

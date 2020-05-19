@@ -17,6 +17,10 @@ const (
 	spacesPerLevel   = 2
 )
 
+type editContext struct {
+	ChangeLog []string
+}
+
 type Editor struct {
 	MaxLevels int
 }
@@ -43,24 +47,39 @@ func (e *Editor) formatForEmpty(i *Issue, level int, str io.StringWriter) error 
 	return nil
 }
 
-func (e *Editor) appendNewSection(i *Issue) error {
+func (c *editContext) log(s string) {
+	c.ChangeLog = append(c.ChangeLog, s)
+}
+
+func (c *editContext) logUpdate(i *Issue) {
+	status := "opened"
+	if i.Status == StatusClosed {
+		status = "closed"
+	}
+	c.log(fmt.Sprintf("Updated child issue #%v. New status: %v", i.ID, status))
+}
+
+func (e *Editor) appendNewSection(i *Issue, ctx *editContext) (string, error) {
 	var str strings.Builder
 
 	str.WriteString(fmt.Sprintf("%s\n\n", issueSectionHead))
 
 	for _, ci := range i.Children {
 		if err := e.formatForEmpty(ci, 0 /*level*/, &str); err != nil {
-			return err
+			return "", err
 		}
 	}
 
+	result := ""
 	if len(i.Body) > 0 {
-		i.Body = strings.TrimRight(i.Body, " \n\t") + "\n\n" + str.String()
+		result = strings.TrimRight(i.Body, " \n\t") + "\n\n" + str.String()
 	} else {
-		i.Body = str.String()
+		result = str.String()
 	}
 
-	return nil
+	ctx.log(fmt.Sprintf("Appended new block with %v child issue(s)", len(i.Children)))
+
+	return result, nil
 }
 
 func countPrefixSpaces(s string) int {
@@ -93,7 +112,7 @@ func isAllWhitespace(s string) bool {
 	return true
 }
 
-func (e *Editor) updateIssues(i *Issue, start int) {
+func (e *Editor) updateIssues(i *Issue, start int, ctx *editContext) string {
 	var str strings.Builder
 
 	scanner := bufio.NewScanner(strings.NewReader(i.Body[start:]))
@@ -132,29 +151,40 @@ func (e *Editor) updateIssues(i *Issue, start int) {
 		}
 
 		log.Printf("Found child issue. id=%v status=%v", ci.ID, ci.Status)
-		str.WriteString(ci.FormatTitle(spaces) + eol)
+		title := ci.FormatTitle(spaces)
+		if title != line {
+			ctx.logUpdate(ci)
+		}
+		str.WriteString(title + eol)
 	}
 
-	i.Body = i.Body[:start] + str.String()
+	return i.Body[:start] + str.String()
 }
 
-func (e *Editor) Update(i *Issue) error {
-	if i == nil || len(i.Children) == 0 {
-		return nil
+func (e *Editor) Update(i *Issue) (string, []string, error) {
+	if i == nil {
+		return "", nil, nil
 	}
 
-	log.Printf("Editing issue body. issue=%v children=%v", i.ID, len(i.Children))
+	if len(i.Children) == 0 {
+		return i.Body, nil, nil
+	}
+
+	ctx := &editContext{
+		ChangeLog: make([]string, 0),
+	}
 
 	if len(i.Body) == 0 {
-		return e.appendNewSection(i)
+		body, err := e.appendNewSection(i, ctx)
+		return body, ctx.ChangeLog, err
 	}
 
 	sectionStart := strings.LastIndex(i.Body, issueSectionHead)
 	if sectionStart == -1 {
-		return e.appendNewSection(i)
+		body, err := e.appendNewSection(i, ctx)
+		return body, ctx.ChangeLog, err
 	}
 
-	e.updateIssues(i, sectionStart+len(issueSectionHead))
-
-	return nil
+	body := e.updateIssues(i, sectionStart+len(issueSectionHead), ctx)
+	return body, ctx.ChangeLog, nil
 }

@@ -14,6 +14,9 @@ inputs:
   SYNC_DAYS:
     description: "Update issues changed in the last sync days"
     default: "1"
+  ADD_CHANGELOG:
+    description: "Add comments with updates made to parent issues"
+    default: "1"
   MAX_LEVELS:
     description: "Show max levels of nested issues in parent"
     default: "0"

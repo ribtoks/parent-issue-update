@@ -21,12 +21,13 @@ const (
 )
 
 type env struct {
-	token     string
-	owner     string
-	repo      string
-	syncDays  int
-	maxLevels int
-	dryRun    bool
+	token        string
+	owner        string
+	repo         string
+	syncDays     int
+	maxLevels    int
+	addChangelog bool
+	dryRun       bool
 }
 
 type service struct {
@@ -45,10 +46,11 @@ func environment() *env {
 	r := strings.Split(os.Getenv("INPUT_REPO"), "/")
 
 	e := &env{
-		owner:  r[0],
-		repo:   r[1],
-		token:  os.Getenv("INPUT_TOKEN"),
-		dryRun: flagToBool(os.Getenv("INPUT_DRY_RUN")),
+		owner:        r[0],
+		repo:         r[1],
+		token:        os.Getenv("INPUT_TOKEN"),
+		dryRun:       flagToBool(os.Getenv("INPUT_DRY_RUN")),
+		addChangelog: flagToBool(os.Getenv("INPUT_ADD_CHANGELOG")),
 	}
 
 	var err error
@@ -67,9 +69,12 @@ func environment() *env {
 }
 
 func (e *env) debugPrint() {
+	log.Printf("Repo: %v", e.repo)
+	log.Printf("Owner: %v", e.owner)
 	log.Printf("Sync days: %v", e.syncDays)
 	log.Printf("Max levels: %v", e.maxLevels)
 	log.Printf("Dry run: %v", e.dryRun)
+	log.Printf("Add comments: %v", e.addChangelog)
 }
 
 func (s *service) fetchGithubIssues() ([]*github.Issue, error) {
@@ -126,7 +131,20 @@ func (s *service) fetchIssuesByID(issues []int) ([]*github.Issue, error) {
 	return allIssues, nil
 }
 
-func (s *service) updateIssue(i *Issue) {
+func createComment(changelog []string) string {
+	if len(changelog) == 0 {
+		return ""
+	}
+
+	var str strings.Builder
+	str.WriteString("Issue update changelog:\n")
+	for _, s := range changelog {
+		str.WriteString(fmt.Sprintf("- %s\n", s))
+	}
+	return str.String()
+}
+
+func (s *service) updateIssue(i *Issue, changelog []string) {
 	defer s.wg.Done()
 
 	log.Printf("About to update an issue. issue=%v", i.ID)
@@ -142,6 +160,17 @@ func (s *service) updateIssue(i *Issue) {
 
 	if err != nil {
 		log.Printf("Error while editing an issue. issue=%v err=%v", i.ID, err)
+	}
+
+	if s.env.addChangelog && len(changelog) > 0 {
+		body := createComment(changelog)
+		comment := &github.IssueComment{
+			Body: &body,
+		}
+		_, _, err = s.client.Issues.CreateComment(s.ctx, s.env.owner, s.env.repo, i.ID, comment)
+		if err != nil {
+			log.Printf("Error while adding a comment. issue=%v err=%v", i.ID, err)
+		}
 	}
 
 	log.Printf("Updated issue. issue=%v", i.ID)
@@ -186,30 +215,29 @@ func main() {
 		MaxLevels: svc.env.maxLevels,
 	}
 
-	count := 0
-
 	for _, i := range issues {
-		oldBody := i.Body
-		err := e.Update(i)
+		if i.Status == StatusClosed {
+			log.Printf("Skipping closed issue. issue=%v", i.ID)
+			continue
+		}
+
+		body, changeLog, err := e.Update(i)
 		if err != nil {
 			log.Printf("Failed to update issue body. issue=%v err=%v", i.ID, err)
 			continue
 		}
 
-		if oldBody == i.Body {
+		if body == i.Body {
 			log.Printf("Skipping identical issue body. issue=%v", i.ID)
 			continue
 		}
 
-		count++
 		svc.wg.Add(1)
-		go svc.updateIssue(i)
+		go svc.updateIssue(i, changeLog)
 	}
 
 	log.Printf("Waiting for issue update to finish...")
 	svc.wg.Wait()
 
-	if count > 0 {
-		fmt.Println(fmt.Sprintf(`::set-output name=updatedIssues::%s`, "1"))
-	}
+	fmt.Println(fmt.Sprintf(`::set-output name=updatedIssues::%s`, "1"))
 }

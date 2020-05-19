@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+type I = Issue
+
 func createIssuesImpl(children, level, recurse, id int, status IssueStatus) *Issue {
 	issue := &Issue{
 		ID:     id,
@@ -41,21 +43,25 @@ func createIssues(children, level, recurse int, status IssueStatus) *Issue {
 	return createIssuesImpl(children, level, recurse, 1 /*parent id*/, status)
 }
 
-func EditorSuite(t *testing.T, e *Editor, i *Issue, initialBody, expectedBody string) {
+func EditorSuite(t *testing.T, e *Editor, i *Issue, initialBody, expectedBody string, changes int) {
 	i.Body = initialBody
-	err := e.Update(i)
+	body, changeLog, err := e.Update(i)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if i.Body != expectedBody {
+	if body != expectedBody {
 		t.Errorf("Body does not match. actual=%v expected=%v", i.Body, expectedBody)
+	}
+
+	if len(changeLog) != changes {
+		t.Errorf("Changes count does not match. actual=%v expected=%v", len(changeLog), changes)
 	}
 }
 
-func EditSuite(t *testing.T, i *Issue, initialBody, expectedBody string) {
+func EditSuite(t *testing.T, i *Issue, initialBody, expectedBody string, changes int) {
 	e := &Editor{}
-	EditorSuite(t, e, i, initialBody, expectedBody)
+	EditorSuite(t, e, i, initialBody, expectedBody, changes)
 }
 
 func TestNoChildren(t *testing.T) {
@@ -66,7 +72,7 @@ func TestNoChildren(t *testing.T) {
 	`
 	issue := createIssues(
 		0 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
-	EditSuite(t, issue, body, body)
+	EditSuite(t, issue, body, body, 0 /*changes*/)
 }
 
 func TestAddOneChildSingleLineBody(t *testing.T) {
@@ -80,7 +86,7 @@ func TestAddOneChildSingleLineBody(t *testing.T) {
 	issue := createIssues(
 
 		1 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 1 /*changes*/)
 }
 
 func TestAddOneChildEmptyBody(t *testing.T) {
@@ -91,7 +97,7 @@ func TestAddOneChildEmptyBody(t *testing.T) {
 `
 	issue := createIssues(
 		1 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 1 /*changes*/)
 }
 
 func TestAddFewChildrenSingleLineBody(t *testing.T) {
@@ -105,7 +111,7 @@ func TestAddFewChildrenSingleLineBody(t *testing.T) {
 `
 	issue := createIssues(
 		2 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 1 /*changes*/)
 }
 
 func TestAddHierarchySingleLineBody(t *testing.T) {
@@ -123,7 +129,7 @@ func TestAddHierarchySingleLineBody(t *testing.T) {
 `
 	issue := createIssues(
 		2 /*children*/, 0 /*level*/, 1 /*recurse*/, StatusOpened)
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 1 /*changes*/)
 }
 
 func TestAddHierarchyMaxLevelsBody(t *testing.T) {
@@ -139,7 +145,7 @@ func TestAddHierarchyMaxLevelsBody(t *testing.T) {
 		2 /*children*/, 0 /*level*/, 1 /*recurse*/, StatusOpened)
 	EditorSuite(t,
 		&Editor{MaxLevels: 1},
-		issue, body, expected)
+		issue, body, expected, 1 /*changes*/)
 }
 
 func TestAddFewChildrenNewlines(t *testing.T) {
@@ -155,7 +161,7 @@ func TestAddFewChildrenNewlines(t *testing.T) {
 `
 	issue := createIssues(
 		2 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 1 /*changes*/)
 }
 
 func TestFewChildrenEmptyBody(t *testing.T) {
@@ -168,7 +174,7 @@ func TestFewChildrenEmptyBody(t *testing.T) {
 `
 	issue := createIssues(
 		3 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 1 /*changes*/)
 }
 
 func TestUpdateCheckOneChildEmptyBody(t *testing.T) {
@@ -184,7 +190,7 @@ func TestUpdateCheckOneChildEmptyBody(t *testing.T) {
 
 	issue := createIssues(
 		1 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusClosed)
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 1 /*changes*/)
 }
 
 func TestUpdateUncheckOneChildEmptyBody(t *testing.T) {
@@ -200,7 +206,7 @@ func TestUpdateUncheckOneChildEmptyBody(t *testing.T) {
 
 	issue := createIssues(
 		1 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 1 /*changes*/)
 }
 
 func TestUpdateCheckFewChildrenNonEmptyBody(t *testing.T) {
@@ -224,7 +230,7 @@ efgh
 
 	issue := createIssues(
 		2 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusClosed)
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 2 /*changes*/)
 }
 
 func TestUpdateUncheckFewChildrenNonEmptyBody(t *testing.T) {
@@ -248,7 +254,7 @@ efgh
 
 	issue := createIssues(
 		2 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 2 /*changes*/)
 }
 
 func TestMultiLevelHangingChildrenUpdate(t *testing.T) {
@@ -276,7 +282,7 @@ efgh
 
 	issue := createIssues(
 		1 /*children*/, 0 /*level*/, 3 /*recurse*/, StatusOpened)
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 4 /*changes*/)
 }
 
 func TestMultiLevelOneChildUpdate(t *testing.T) {
@@ -302,7 +308,7 @@ efgh
 
 	issue := createIssues(
 		2 /*children*/, 0 /*level*/, 1 /*recurse*/, StatusOpened)
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 3 /*changes*/)
 }
 
 func TestMultiLevelFewChildrenUpdate(t *testing.T) {
@@ -341,7 +347,7 @@ efgh
 	issue.Children[0].Children[1].Children[1].Status = StatusClosed
 	issue.Children[1].Status = StatusClosed
 
-	EditSuite(t, issue, body, expected)
+	EditSuite(t, issue, body, expected, 3 /*changes*/)
 }
 
 func TestMultiLevelUpdateMaxLevel(t *testing.T) {
@@ -380,5 +386,5 @@ efgh
 	issue.Children[0].Children[1].Children[1].Status = StatusClosed
 	issue.Children[1].Status = StatusClosed
 
-	EditorSuite(t, &Editor{MaxLevels: 2}, issue, body, expected)
+	EditorSuite(t, &Editor{MaxLevels: 2}, issue, body, expected, 2 /*changes*/)
 }
