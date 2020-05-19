@@ -17,8 +17,9 @@ var (
 
 type tree struct {
 	// map from parent to child issue
-	nodes  map[int]map[int]bool
-	issues map[int]*Issue
+	nodes   map[int]map[int]bool
+	issues  map[int]*Issue
+	missing []int
 }
 
 func isParentIssueMark(m string) bool {
@@ -60,8 +61,9 @@ func parseParentIssue(i *github.Issue) (int, error) {
 
 func NewTree(issues []*github.Issue) *tree {
 	t := &tree{
-		nodes:  make(map[int]map[int]bool),
-		issues: make(map[int]*Issue),
+		nodes:   make(map[int]map[int]bool),
+		issues:  make(map[int]*Issue),
+		missing: make([]int, 0),
 	}
 	for _, i := range issues {
 		child := i.GetNumber()
@@ -77,6 +79,14 @@ func NewTree(issues []*github.Issue) *tree {
 		log.Printf("Added issues link. parent=%v child=%v", parent, child)
 	}
 
+	for p, _ := range t.nodes {
+		if _, ok := t.issues[p]; !ok {
+			t.missing = append(t.missing, p)
+		}
+	}
+
+	log.Printf("Found missing parent issues. count=%v", len(t.missing))
+
 	return t
 }
 
@@ -86,6 +96,20 @@ func (t *tree) addNode(parent, child int) {
 	}
 
 	t.nodes[parent][child] = true
+}
+
+func (t *tree) AddParentIssues(issues []*github.Issue) {
+	log.Printf("Adding additional parent issues. count=%v", len(issues))
+	for _, i := range issues {
+		issue := NewIssue(i)
+
+		if _, ok := t.issues[issue.ID]; ok {
+			log.Printf("Parent issue seem to exist already!")
+			continue
+		}
+
+		t.issues[issue.ID] = issue
+	}
 }
 
 func (t *tree) Issues() []*Issue {

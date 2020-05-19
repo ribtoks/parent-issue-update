@@ -100,6 +100,32 @@ func (s *service) fetchGithubIssues() ([]*github.Issue, error) {
 	return allIssues, nil
 }
 
+func (s *service) fetchIssuesByID(issues []int) ([]*github.Issue, error) {
+	log.Printf("Fetching issues by ID. count=%v", len(issues))
+	var wg sync.WaitGroup
+
+	var allIssues []*github.Issue
+	for _, i := range issues {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+
+			issue, _, err := s.client.Issues.Get(s.ctx, s.env.owner, s.env.repo, id)
+			if err != nil {
+				log.Printf("Failed to retrieve an issue. issue=%v err=%v", id, err)
+				return
+			}
+
+			allIssues = append(allIssues, issue)
+		}(i)
+	}
+
+	log.Printf("Waiting for issues to be fetched by ID")
+	wg.Wait()
+
+	return allIssues, nil
+}
+
 func (s *service) updateIssue(i *Issue) {
 	defer s.wg.Done()
 
@@ -150,6 +176,11 @@ func main() {
 
 	tr := NewTree(ghIssues)
 	issues := tr.Issues()
+	missing, err := svc.fetchIssuesByID(tr.missing)
+	if err != nil {
+		log.Panic(err)
+	}
+	tr.AddParentIssues(missing)
 
 	e := &Editor{
 		MaxLevels: svc.env.maxLevels,
@@ -177,7 +208,6 @@ func main() {
 
 	log.Printf("Waiting for issue update to finish...")
 	svc.wg.Wait()
-	log.Printf("Update finished.")
 
 	if count > 0 {
 		fmt.Println(fmt.Sprintf(`::set-output name=updatedIssues::%s`, "1"))
