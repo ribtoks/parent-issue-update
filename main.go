@@ -144,7 +144,7 @@ func createComment(changelog []string) string {
 	return str.String()
 }
 
-func (s *service) updateIssue(i *Issue, changelog []string) {
+func (s *service) updateIssue(i *Issue, body string, changelog []string) {
 	defer s.wg.Done()
 
 	log.Printf("About to update an issue. issue=%v", i.ID)
@@ -154,7 +154,7 @@ func (s *service) updateIssue(i *Issue, changelog []string) {
 	}
 
 	req := &github.IssueRequest{
-		Body: &i.Body,
+		Body: &body,
 	}
 	_, _, err := s.client.Issues.Edit(s.ctx, s.env.owner, s.env.repo, i.ID, req)
 
@@ -237,7 +237,7 @@ func main() {
 		}
 
 		svc.wg.Add(1)
-		go svc.updateIssue(i, changeLog)
+		go svc.updateIssue(i, body, changeLog)
 	}
 
 	log.Printf("Waiting for issue update to finish...")
