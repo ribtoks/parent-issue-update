@@ -65,7 +65,7 @@ func TestNoChildren(t *testing.T) {
 	efgh
 	`
 	issue := createIssues(
-		0 /*children*/, 0 /*level*/, 0 /*recurse*/, issues.StatusOpened)
+		0 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
 	EditSuite(t, issue, body, body)
 }
 
@@ -79,7 +79,7 @@ func TestAddOneChildSingleLineBody(t *testing.T) {
 `
 	issue := createIssues(
 
-		1 /*children*/, 0 /*level*/, 0 /*recurse*/, issues.StatusOpened)
+		1 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
 	EditSuite(t, issue, body, expected)
 }
 
@@ -90,7 +90,7 @@ func TestAddOneChildEmptyBody(t *testing.T) {
 - [ ] Child Issue id(10) level(1) #10
 `
 	issue := createIssues(
-		1 /*children*/, 0 /*level*/, 0 /*recurse*/, issues.StatusOpened)
+		1 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
 	EditSuite(t, issue, body, expected)
 }
 
@@ -104,7 +104,7 @@ func TestAddFewChildrenSingleLineBody(t *testing.T) {
 - [ ] Child Issue id(11) level(1) #11
 `
 	issue := createIssues(
-		2 /*children*/, 0 /*level*/, 0 /*recurse*/, issues.StatusOpened)
+		2 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
 	EditSuite(t, issue, body, expected)
 }
 
@@ -122,7 +122,7 @@ func TestAddHierarchySingleLineBody(t *testing.T) {
   - [ ] Child Issue id(111) level(2) #111
 `
 	issue := createIssues(
-		2 /*children*/, 0 /*level*/, 1 /*recurse*/, issues.StatusOpened)
+		2 /*children*/, 0 /*level*/, 1 /*recurse*/, StatusOpened)
 	EditSuite(t, issue, body, expected)
 }
 
@@ -136,7 +136,7 @@ func TestAddHierarchyMaxLevelsBody(t *testing.T) {
 - [ ] Child Issue id(11) level(1) #11
 `
 	issue := createIssues(
-		2 /*children*/, 0 /*level*/, 1 /*recurse*/, issues.StatusOpened)
+		2 /*children*/, 0 /*level*/, 1 /*recurse*/, StatusOpened)
 	EditorSuite(t,
 		&Editor{MaxLevels: 1},
 		issue, body, expected)
@@ -154,7 +154,7 @@ func TestAddFewChildrenNewlines(t *testing.T) {
 - [ ] Child Issue id(11) level(1) #11
 `
 	issue := createIssues(
-		2 /*children*/, 0 /*level*/, 0 /*recurse*/, issues.StatusOpened)
+		2 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
 	EditSuite(t, issue, body, expected)
 }
 
@@ -167,7 +167,7 @@ func TestFewChildrenEmptyBody(t *testing.T) {
 - [ ] Child Issue id(12) level(1) #12
 `
 	issue := createIssues(
-		3 /*children*/, 0 /*level*/, 0 /*recurse*/, issues.StatusOpened)
+		3 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
 	EditSuite(t, issue, body, expected)
 }
 
@@ -183,7 +183,7 @@ func TestUpdateCheckOneChildEmptyBody(t *testing.T) {
 `
 
 	issue := createIssues(
-		1 /*children*/, 0 /*level*/, 0 /*recurse*/, issues.StatusClosed)
+		1 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusClosed)
 	EditSuite(t, issue, body, expected)
 }
 
@@ -199,7 +199,7 @@ func TestUpdateUncheckOneChildEmptyBody(t *testing.T) {
 `
 
 	issue := createIssues(
-		1 /*children*/, 0 /*level*/, 0 /*recurse*/, issues.StatusOpened)
+		1 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
 	EditSuite(t, issue, body, expected)
 }
 
@@ -223,7 +223,7 @@ efgh
 `
 
 	issue := createIssues(
-		2 /*children*/, 0 /*level*/, 0 /*recurse*/, issues.StatusClosed)
+		2 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusClosed)
 	EditSuite(t, issue, body, expected)
 }
 
@@ -247,7 +247,7 @@ efgh
 `
 
 	issue := createIssues(
-		2 /*children*/, 0 /*level*/, 0 /*recurse*/, issues.StatusOpened)
+		2 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
 	EditSuite(t, issue, body, expected)
 }
 
@@ -275,7 +275,7 @@ efgh
 `
 
 	issue := createIssues(
-		1 /*children*/, 0 /*level*/, 3 /*recurse*/, issues.StatusOpened)
+		1 /*children*/, 0 /*level*/, 3 /*recurse*/, StatusOpened)
 	EditSuite(t, issue, body, expected)
 }
 
@@ -301,7 +301,7 @@ efgh
 `
 
 	issue := createIssues(
-		2 /*children*/, 0 /*level*/, 1 /*recurse*/, issues.StatusOpened)
+		2 /*children*/, 0 /*level*/, 1 /*recurse*/, StatusOpened)
 	EditSuite(t, issue, body, expected)
 }
 
@@ -335,11 +335,11 @@ efgh
 `
 
 	issue := createIssues(
-		2 /*children*/, 0 /*level*/, 2 /*recurse*/, issues.StatusOpened)
-	issue.Children[0].Children[0].Status = issues.StatusClosed
-	issue.Children[0].Children[1].Children[0].Status = issues.StatusClosed
-	issue.Children[0].Children[1].Children[1].Status = issues.StatusClosed
-	issue.Children[1].Status = issues.StatusClosed
+		2 /*children*/, 0 /*level*/, 2 /*recurse*/, StatusOpened)
+	issue.Children[0].Children[0].Status = StatusClosed
+	issue.Children[0].Children[1].Children[0].Status = StatusClosed
+	issue.Children[0].Children[1].Children[1].Status = StatusClosed
+	issue.Children[1].Status = StatusClosed
 
 	EditSuite(t, issue, body, expected)
 }
@@ -374,11 +374,11 @@ efgh
 `
 
 	issue := createIssues(
-		2 /*children*/, 0 /*level*/, 2 /*recurse*/, issues.StatusOpened)
-	issue.Children[0].Children[0].Status = issues.StatusClosed
-	issue.Children[0].Children[1].Children[0].Status = issues.StatusClosed
-	issue.Children[0].Children[1].Children[1].Status = issues.StatusClosed
-	issue.Children[1].Status = issues.StatusClosed
+		2 /*children*/, 0 /*level*/, 2 /*recurse*/, StatusOpened)
+	issue.Children[0].Children[0].Status = StatusClosed
+	issue.Children[0].Children[1].Children[0].Status = StatusClosed
+	issue.Children[0].Children[1].Children[1].Status = StatusClosed
+	issue.Children[1].Status = StatusClosed
 
 	EditorSuite(t, &Editor{MaxLevels: 2}, issue, body, expected)
 }

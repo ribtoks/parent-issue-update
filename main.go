@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -173,4 +174,6 @@ func main() {
 
 	log.Printf("Waiting for issue update to finish")
 	svc.wg.Wait()
+
+	fmt.Println(fmt.Sprintf(`::set-output name=updatedIssues::%s`, "1"))
 }
