@@ -28,6 +28,7 @@ type env struct {
 	maxLevels    int
 	addChangelog bool
 	dryRun       bool
+	updateClosed bool
 }
 
 type service struct {
@@ -51,6 +52,7 @@ func environment() *env {
 		token:        os.Getenv("INPUT_TOKEN"),
 		dryRun:       flagToBool(os.Getenv("INPUT_DRY_RUN")),
 		addChangelog: flagToBool(os.Getenv("INPUT_ADD_CHANGELOG")),
+		updateClosed: flagToBool(os.Getenv("INPUT_UPDATE_CLOSED")),
 	}
 
 	var err error
@@ -80,6 +82,7 @@ func (e *env) debugPrint() {
 	log.Printf("Max levels: %v", e.maxLevels)
 	log.Printf("Dry run: %v", e.dryRun)
 	log.Printf("Add comments: %v", e.addChangelog)
+	log.Printf("Update closed: %v", e.updateClosed)
 }
 
 func (s *service) fetchGithubIssues() ([]*github.Issue, error) {
@@ -227,7 +230,8 @@ func main() {
 	}
 
 	for _, i := range issues {
-		if i.Status != StatusOpened {
+		canProcess := i.IsOpened() || (i.IsClosed() && svc.env.updateClosed)
+		if !canProcess {
 			log.Printf("Skipping issue update. issue=%v status=%v", i.ID, i.Status)
 			continue
 		}

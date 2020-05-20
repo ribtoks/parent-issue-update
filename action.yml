@@ -20,6 +20,9 @@ inputs:
   MAX_LEVELS:
     description: "Show max levels of nested issues in parent"
     default: "0"
+  UPDATE_CLOSED:
+    description: "Update closed parent issues too"
+    default: "0"
 
 outputs:
 

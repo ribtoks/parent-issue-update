@@ -27,6 +27,14 @@ type Issue struct {
 	Children []*Issue
 }
 
+func (i *Issue) IsOpened() bool {
+	return i.Status == StatusOpened
+}
+
+func (i *Issue) IsClosed() bool {
+	return i.Status == StatusClosed
+}
+
 func (i *Issue) ToMap() map[int]*Issue {
 	issueMap := make(map[int]*Issue)
 	issueMap[i.ID] = i

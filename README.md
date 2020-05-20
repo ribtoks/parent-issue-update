@@ -40,18 +40,19 @@ This action was designed to run on schedule instead of per issue update event in
 
 | Input                                             | Description                                        |
 |------------------------------------------------------|-----------------------------------------------|
-| `REPO`  | Repository name in the format of `owner/repo` (required)   |
 | `TOKEN`  | Github token used to create or close issues (required)  |
+| `REPO`  | Repository name in the format of `owner/repo` (required)   |
 | `DRY_RUN`  | Do not update real real issues (used for debugging) |
 | `SYNC_DAYS` | Update parent issues for issue changes in the last `SYNC_DAYS` (defaults to `1`) |
 | `MAX_LEVELS` | Keep this deep hierarchy in parent issues (defaults to `0` - unlimited)
 | `ADD_CHANGELOG`  | Add a short summary to parent issue with the update changelog |
+| `UPDATE_CLOSED`  | Update closed parent issues too |
 
 Flag values like `DRY_RUN` or `ADD_CHANGELOG` use values `1`/`true`/`y` as ON switch.
 
 If you want to run this action every week, you need to update `SYNC_DAYS` to `7` and update cron job schedule in Action syntax to be `0 0 0 * *` (use [crontab guru](https://crontab.guru/) for help).
 
-If you want to sync all issues, use `all` as a value for `SYNC_DAYS`.
+If you want to sync all issues at every run, use `all` as a value for `SYNC_DAYS`.
 
 ### Outputs
 
