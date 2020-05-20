@@ -23,7 +23,12 @@ type tree struct {
 }
 
 func isParentIssueMark(m string) bool {
+	if len(m) == 0 {
+		return false
+	}
+
 	m = strings.ToLower(strings.TrimSpace(m))
+
 	return m == "parent issue" ||
 		m == "epic" ||
 		m == "parent"
@@ -31,9 +36,12 @@ func isParentIssueMark(m string) bool {
 
 func parseIssueNumber(s string) (int, error) {
 	s = strings.TrimSpace(s)
-	if s[0] != '#' {
+
+	// 10 digits of max-int + '#'
+	if s[0] != '#' || len(s) > 11 {
 		return -1, errWrongIssueSyntax
 	}
+
 	return strconv.Atoi(s[1:])
 }
 
@@ -41,21 +49,33 @@ func parseParentIssue(i *github.Issue) (int, error) {
 	scanner := bufio.NewScanner(strings.NewReader(i.GetBody()))
 	for scanner.Scan() {
 		line := scanner.Text()
+
 		if !strings.Contains(line, "#") {
 			continue
 		}
+
 		if !strings.Contains(line, ":") {
 			continue
 		}
+
 		parts := strings.Split(line, ":")
 		if len(parts) != 2 {
 			continue
 		}
+
 		if !isParentIssueMark(parts[0]) {
 			continue
 		}
-		return parseIssueNumber(parts[1])
+
+		issue, err := parseIssueNumber(parts[1])
+		if err != nil {
+			log.Printf("Failed to parse parent issue. line=%v err=%v", line, err)
+			continue
+		}
+
+		return issue, nil
 	}
+
 	return -1, errParentNotFound
 }
 
@@ -65,6 +85,7 @@ func NewTree(issues []*github.Issue) *tree {
 		issues:  make(map[int]*Issue),
 		missing: make([]int, 0),
 	}
+
 	for _, i := range issues {
 		child := i.GetNumber()
 		t.issues[child] = NewIssue(i)
@@ -76,7 +97,6 @@ func NewTree(issues []*github.Issue) *tree {
 		}
 
 		t.addNode(parent, child)
-		log.Printf("Added issues link. parent=%v child=%v", parent, child)
 	}
 
 	for p, _ := range t.nodes {
@@ -85,7 +105,7 @@ func NewTree(issues []*github.Issue) *tree {
 		}
 	}
 
-	log.Printf("Found missing parent issues. count=%v", len(t.missing))
+	log.Printf("Processed missing parent issues. count=%v", len(t.missing))
 
 	return t
 }
@@ -96,6 +116,7 @@ func (t *tree) addNode(parent, child int) {
 	}
 
 	t.nodes[parent][child] = true
+	log.Printf("Added issues link. parent=%v child=%v", parent, child)
 }
 
 func (t *tree) AddParentIssues(issues []*github.Issue) {
@@ -104,7 +125,7 @@ func (t *tree) AddParentIssues(issues []*github.Issue) {
 		issue := NewIssue(i)
 
 		if _, ok := t.issues[issue.ID]; ok {
-			log.Printf("Parent issue seem to exist already!")
+			log.Printf("Parent issue is already added. issue=%v", issue.ID)
 			continue
 		}
 
@@ -113,16 +134,19 @@ func (t *tree) AddParentIssues(issues []*github.Issue) {
 }
 
 func (t *tree) Issues() []*Issue {
-	log.Printf("Making list out of issue tree")
+	log.Printf("Making a list out of issue tree. nodes_count=%v", len(t.nodes))
 	issues := make([]*Issue, 0, len(t.nodes))
+
 	for p, cm := range t.nodes {
 		log.Printf("Generating children list. parent=%v children_count=%v", p, len(cm))
 		children := make([]*Issue, 0, len(cm))
+
 		for i, _ := range cm {
 			if _, ok := t.issues[i]; !ok {
 				log.Printf("Child issue is not found. issue=%v", i)
 				continue
 			}
+
 			children = append(children, t.issues[i])
 		}
 
@@ -131,6 +155,8 @@ func (t *tree) Issues() []*Issue {
 
 		issues = append(issues, pi)
 	}
+
+	log.Printf("Generated list of parent issues. count=%v", len(issues))
 
 	return issues
 }

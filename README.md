@@ -51,6 +51,8 @@ Flag values like `DRY_RUN` or `ADD_CHANGELOG` use values `1`/`true`/`y` as ON sw
 
 If you want to run this action every week, you need to update `SYNC_DAYS` to `7` and update cron job schedule in Action syntax to be `0 0 0 * *` (use [crontab guru](https://crontab.guru/) for help).
 
+If you want to sync all issues, use `all` as a value for `SYNC_DAYS`.
+
 ### Outputs
 
 | Output                                             | Description                                        |

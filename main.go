@@ -55,9 +55,14 @@ func environment() *env {
 
 	var err error
 
-	e.syncDays, err = strconv.Atoi(os.Getenv("INPUT_SYNC_DAYS"))
+	syncDays := os.Getenv("INPUT_SYNC_DAYS")
+	e.syncDays, err = strconv.Atoi(syncDays)
 	if err != nil {
-		e.syncDays = defaultSyncDays
+		if strings.ToLower(syncDays) == "all" {
+			e.syncDays = -1
+		} else {
+			e.syncDays = defaultSyncDays
+		}
 	}
 
 	e.maxLevels, err = strconv.Atoi(os.Getenv("INPUT_MAX_LEVELS"))
@@ -83,7 +88,10 @@ func (s *service) fetchGithubIssues() ([]*github.Issue, error) {
 	opt := &github.IssueListByRepoOptions{
 		State:       "all",
 		ListOptions: github.ListOptions{PerPage: defaultIssuesPerPage},
-		Since:       time.Now().AddDate(0 /*year*/, 0 /*month*/, -s.env.syncDays),
+	}
+
+	if s.env.syncDays > 0 {
+		opt.Since = time.Now().AddDate(0 /*year*/, 0 /*month*/, -s.env.syncDays)
 	}
 
 	for {
@@ -189,7 +197,6 @@ func main() {
 		&oauth2.Token{AccessToken: env.token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-
 	svc := &service{
 		ctx:    ctx,
 		client: github.NewClient(tc),
@@ -220,8 +227,8 @@ func main() {
 	}
 
 	for _, i := range issues {
-		if i.Status == StatusClosed {
-			log.Printf("Skipping closed issue. issue=%v", i.ID)
+		if i.Status != StatusOpened {
+			log.Printf("Skipping issue update. issue=%v status=%v", i.ID, i.Status)
 			continue
 		}
 

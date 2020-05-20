@@ -12,6 +12,7 @@ type IssueStatus int
 const (
 	StatusOpened IssueStatus = iota
 	StatusClosed
+	StatusLocked
 )
 
 var (
@@ -62,8 +63,14 @@ func NewIssue(i *github.Issue) *Issue {
 		Status: StatusOpened,
 	}
 
+	if i.GetLocked() {
+		issue.Status = StatusLocked
+	}
+
+	// status closed is more important than locked
 	if i.GetState() == "closed" {
 		issue.Status = StatusClosed
 	}
+
 	return issue
 }
