@@ -32,6 +32,8 @@ jobs:
         REPO: ${{ github.repository }}
 ```
 
+In order to link child issues to parent issues, add a line `Parent: #1234` or `Epic: #1234` or `Parent issue: #1234` anywhere in the issue body. You can have as many nested levels as you need.
+
 This action was designed to run on schedule instead of per issue update event in order to reduce amount of possible race conditions when multiple issues are updated at once and multiple worflows are started in parallel. Currently GitHub Actions do not support cancelling parallel jobs. When this will be supported, it will be safe to use this action per `issue` `opened`/`reopened`/`closed` trigger.
 
 > **NOTE:** Please note that currently GitHub has 5000 requests per hour limit so if you are running it on a fresh repository and you have lots of todos in comments, you may hit this limit.
