@@ -49,8 +49,8 @@ You can use this action together with [TODO issue generator](https://github.com/
 | `DRY_RUN`  | Do not update real real issues (used for debugging) |
 | `SYNC_DAYS` | Update parent issues for issue changes in the last `SYNC_DAYS` (defaults to `1`) |
 | `MAX_LEVELS` | Keep this deep hierarchy in parent issues (defaults to `0` - unlimited)
-| `ADD_CHANGELOG`  | Add a comment with the update changelog to parent issue |
-| `UPDATE_CLOSED`  | Update closed parent issues too |
+| `ADD_CHANGELOG`  | Add a comment with the update changelog to parent issue (default `1` - enabled |
+| `UPDATE_CLOSED`  | Update closed parent issues too (default `0` - disabled) |
 
 Flag values like `DRY_RUN` or `ADD_CHANGELOG` use values `1`/`true`/`y` as ON switch.
 
