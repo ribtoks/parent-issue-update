@@ -218,12 +218,12 @@ func main() {
 	}
 
 	tr := NewTree(ghIssues)
-	issues := tr.Issues()
 	missing, err := svc.fetchIssuesByID(tr.missing)
 	if err != nil {
 		log.Panic(err)
 	}
 	tr.AddParentIssues(missing)
+	issues := tr.Issues()
 
 	e := &Editor{
 		MaxLevels: svc.env.maxLevels,
