@@ -214,6 +214,7 @@ func main() {
 	}
 
 	if len(ghIssues) == 0 {
+		fmt.Println(fmt.Sprintf(`::set-output name=updatedIssues::%s`, "1"))
 		return
 	}
 
