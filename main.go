@@ -214,16 +214,17 @@ func main() {
 	}
 
 	if len(ghIssues) == 0 {
+		fmt.Println(fmt.Sprintf(`::set-output name=updatedIssues::%s`, "1"))
 		return
 	}
 
 	tr := NewTree(ghIssues)
-	issues := tr.Issues()
 	missing, err := svc.fetchIssuesByID(tr.missing)
 	if err != nil {
 		log.Panic(err)
 	}
 	tr.AddParentIssues(missing)
+	issues := tr.Issues()
 
 	e := &Editor{
 		MaxLevels: svc.env.maxLevels,

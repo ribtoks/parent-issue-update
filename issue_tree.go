@@ -150,7 +150,12 @@ func (t *tree) Issues() []*Issue {
 			children = append(children, t.issues[i])
 		}
 
-		pi := t.issues[p]
+		pi, ok := t.issues[p]
+		if !ok {
+			log.Printf("Failed to find an issue. issue=%v", p)
+			continue
+		}
+
 		pi.Children = children
 
 		issues = append(issues, pi)
