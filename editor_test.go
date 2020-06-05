@@ -43,15 +43,15 @@ func createIssues(children, level, recurse int, status IssueStatus) *Issue {
 	return createIssuesImpl(children, level, recurse, 1 /*parent id*/, status)
 }
 
-func EditorSuite(t *testing.T, e *Editor, i *Issue, initialBody, expectedBody string, changes int) {
+func EditorSuite(t *testing.T, e *Editor, i *Issue, addMissing bool, initialBody, expectedBody string, changes int) {
 	i.Body = initialBody
-	body, changeLog, err := e.Update(i)
+	body, changeLog, err := e.Update(i, addMissing)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if body != expectedBody {
-		t.Errorf("Body does not match. actual=%v expected=%v", i.Body, expectedBody)
+		t.Errorf("Body does not match. actual=%v expected=%v", body, expectedBody)
 	}
 
 	if len(changeLog) != changes {
@@ -61,7 +61,12 @@ func EditorSuite(t *testing.T, e *Editor, i *Issue, initialBody, expectedBody st
 
 func EditSuite(t *testing.T, i *Issue, initialBody, expectedBody string, changes int) {
 	e := &Editor{}
-	EditorSuite(t, e, i, initialBody, expectedBody, changes)
+	EditorSuite(t, e, i, false /*addMissing*/, initialBody, expectedBody, changes)
+}
+
+func EditAppendSuite(t *testing.T, i *Issue, initialBody, expectedBody string, changes int) {
+	e := &Editor{}
+	EditorSuite(t, e, i, true /*addMissing*/, initialBody, expectedBody, changes)
 }
 
 func TestNoChildren(t *testing.T) {
@@ -145,7 +150,7 @@ func TestAddHierarchyMaxLevelsBody(t *testing.T) {
 		2 /*children*/, 0 /*level*/, 1 /*recurse*/, StatusOpened)
 	EditorSuite(t,
 		&Editor{MaxLevels: 1},
-		issue, body, expected, 1 /*changes*/)
+		issue, false, body, expected, 1 /*changes*/)
 }
 
 func TestAddFewChildrenNewlines(t *testing.T) {
@@ -386,5 +391,121 @@ efgh
 	issue.Children[0].Children[1].Children[1].Status = StatusClosed
 	issue.Children[1].Status = StatusClosed
 
-	EditorSuite(t, &Editor{MaxLevels: 2}, issue, body, expected, 2 /*changes*/)
+	EditorSuite(t, &Editor{MaxLevels: 2},
+		issue, false /*add missing*/, body, expected, 2 /*changes*/)
+}
+
+func TestAppendNewChild(t *testing.T) {
+	body := `abcd
+efgh
+
+### Child issues:
+
+- [ ] Child Issue id(10) level(1) #10
+`
+
+	expected := `abcd
+efgh
+
+### Child issues:
+
+- [ ] Child Issue id(10) level(1) #10
+- [ ] Child Issue id(11) level(1) #11
+`
+
+	issue := createIssues(
+		2 /*children*/, 0 /*level*/, 0 /*recurse*/, StatusOpened)
+	EditAppendSuite(t, issue, body, expected, 1 /*changes*/)
+}
+
+func TestAppendTwoLevels(t *testing.T) {
+	body := `abcd
+efgh
+
+### Child issues:
+
+- [ ] Child Issue id(11) level(1) #11
+- [ ] Child Issue id(10) level(1) #10
+`
+
+	expected := `abcd
+efgh
+
+### Child issues:
+
+- [ ] Child Issue id(11) level(1) #11
+  - [ ] Child Issue id(110) level(2) #110
+  - [ ] Child Issue id(111) level(2) #111
+- [ ] Child Issue id(10) level(1) #10
+  - [ ] Child Issue id(100) level(2) #100
+  - [ ] Child Issue id(101) level(2) #101
+`
+	issue := createIssues(
+		2 /*children*/, 0 /*level*/, 1 /*recurse*/, StatusOpened)
+	EditAppendSuite(t, issue, body, expected, 2 /*changes*/)
+}
+
+func TestAppendSkipChild(t *testing.T) {
+	body := `abcd
+efgh
+
+### Child issues:
+
+- [x] Child Issue id(11) level(1) #11
+  - [x] Child Issue id(111) level(2) #111
+`
+
+	expected := `abcd
+efgh
+
+### Child issues:
+
+- [ ] Child Issue id(11) level(1) #11
+  - [ ] Child Issue id(111) level(2) #111
+  - [ ] Child Issue id(110) level(2) #110
+- [ ] Child Issue id(10) level(1) #10
+  - [ ] Child Issue id(100) level(2) #100
+  - [ ] Child Issue id(101) level(2) #101
+`
+
+	issue := createIssues(
+		2 /*children*/, 0 /*level*/, 1 /*recurse*/, StatusOpened)
+	EditAppendSuite(t, issue, body, expected, 4 /*changes*/)
+}
+
+func TestAppendMultilevel(t *testing.T) {
+	body := `abcd
+efgh
+
+### Child issues:
+
+- [x] Child Issue id(11) level(1) #11
+  - [x] Child Issue id(110) level(2) #110
+    - [x] Child Issue id(1100) level(3) #1100
+`
+
+	expected := `abcd
+efgh
+
+### Child issues:
+
+- [ ] Child Issue id(11) level(1) #11
+  - [ ] Child Issue id(110) level(2) #110
+    - [ ] Child Issue id(1100) level(3) #1100
+    - [ ] Child Issue id(1101) level(3) #1101
+  - [ ] Child Issue id(111) level(2) #111
+    - [ ] Child Issue id(1110) level(3) #1110
+    - [ ] Child Issue id(1111) level(3) #1111
+- [ ] Child Issue id(10) level(1) #10
+  - [ ] Child Issue id(100) level(2) #100
+    - [ ] Child Issue id(1000) level(3) #1000
+    - [ ] Child Issue id(1001) level(3) #1001
+  - [ ] Child Issue id(101) level(2) #101
+    - [ ] Child Issue id(1010) level(3) #1010
+    - [ ] Child Issue id(1011) level(3) #1011
+`
+
+	issue := createIssues(
+		2 /*children*/, 0 /*level*/, 2 /*recurse*/, StatusOpened)
+	EditAppendSuite(t, issue, body, expected, 6 /*changes*/)
 }

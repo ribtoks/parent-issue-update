@@ -25,6 +25,7 @@ type Issue struct {
 	Body     string
 	Status   IssueStatus
 	Children []*Issue
+	Level    int
 }
 
 func (i *Issue) IsOpened() bool {

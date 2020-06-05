@@ -236,7 +236,7 @@ func main() {
 			continue
 		}
 
-		body, changeLog, err := e.Update(i)
+		body, changeLog, err := e.Update(i, true /*add missing*/)
 		if err != nil {
 			log.Printf("Failed to update issue body. issue=%v err=%v", i.ID, err)
 			continue
