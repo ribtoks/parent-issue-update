@@ -24,8 +24,6 @@ inputs:
     description: "Update closed parent issues too"
     default: "0"
 
-outputs:
-
 runs:
   using: "docker"
   image: "Dockerfile"
