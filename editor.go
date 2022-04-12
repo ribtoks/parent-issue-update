@@ -218,8 +218,11 @@ func (e *Editor) updateIssues(i *Issue, start int, ctx *editContext) string {
 			continue
 		}
 
-		if ctx.Stack.top().Level >= spaces/2 && ctx.AddMissing {
-			e.addMissing(ctx.Stack.top(), &str, ctx)
+		// if next issue is not deeper that the previous, we can unroll the stack
+		for !ctx.Stack.empty() && (ctx.Stack.top().Level >= spaces/2) {
+			if ctx.AddMissing {
+				e.addMissing(ctx.Stack.top(), &str, ctx)
+			}
 			ctx.Stack.pop()
 		}
 

@@ -509,3 +509,58 @@ efgh
 		2 /*children*/, 0 /*level*/, 2 /*recurse*/, StatusOpened)
 	EditAppendSuite(t, issue, body, expected, 6 /*changes*/)
 }
+
+func TestAppendSkipChildCustom(t *testing.T) {
+	body := `abcd
+efgh
+
+### Child issues:
+
+- [ ] Child Issue id(11) level(1) #11
+  - [x] Child Issue id(111) level(2) #111
+- [ ] Child Issue id(10) level(1) #10
+`
+
+	expected := `abcd
+efgh
+
+### Child issues:
+
+- [ ] Child Issue id(11) level(1) #11
+  - [x] Child Issue id(111) level(2) #111
+  - [ ] Child Issue id(110) level(2) #110
+- [ ] Child Issue id(10) level(1) #10
+`
+
+	issue := &Issue{
+		ID:     1,
+		Title:  "Child Issue id(1) level(0)",
+		Status: StatusOpened,
+		Children: []*Issue{
+			&Issue{
+				ID:     11,
+				Title:  "Child Issue id(11) level(1)",
+				Status: StatusOpened,
+				Children: []*Issue{
+					&Issue{
+						ID:     111,
+						Title:  "Child Issue id(111) level(2)",
+						Status: StatusClosed,
+					},
+					&Issue{
+						ID:     110,
+						Title:  "Child Issue id(110) level(2)",
+						Status: StatusOpened,
+					},
+				},
+			},
+			&Issue{
+				ID:     10,
+				Title:  "Child Issue id(10) level(1)",
+				Status: StatusOpened,
+			},
+		},
+	}
+
+	EditAppendSuite(t, issue, body, expected, 1 /*changes*/)
+}
