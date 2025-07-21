@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v31/github"
+	"github.com/google/go-github/v73/github"
 	"golang.org/x/oauth2"
 )
 
@@ -109,7 +109,7 @@ func (s *service) fetchGithubIssues() ([]*github.Issue, error) {
 			break
 		}
 
-		opt.Page = resp.NextPage
+		opt.ListOptions.Page = resp.NextPage
 	}
 	log.Printf("Fetched github issues. count=%v", len(allIssues))
 
