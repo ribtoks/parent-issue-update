@@ -20,7 +20,7 @@ jobs:
         with:
           go-version: stable
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Build
         run: make build
