@@ -25,10 +25,28 @@ inputs:
     default: "0"
 
 runs:
-  using: "docker"
-  image: "Dockerfile"
+  using: "composite"
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: ${{ github.action_path }}/go.mod
+
+    - name: Run parent issue updater
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        INPUT_TOKEN: ${{ inputs.TOKEN }}
+        INPUT_REPO: ${{ inputs.REPO }}
+        INPUT_DRY_RUN: ${{ inputs.DRY_RUN }}
+        INPUT_SYNC_DAYS: ${{ inputs.SYNC_DAYS }}
+        INPUT_ADD_CHANGELOG: ${{ inputs.ADD_CHANGELOG }}
+        INPUT_MAX_LEVELS: ${{ inputs.MAX_LEVELS }}
+        INPUT_UPDATE_CLOSED: ${{ inputs.UPDATE_CLOSED }}
+        GOFLAGS: -mod=vendor
+        CGO_ENABLED: 0
+      run: go run .
 
 branding:
   icon: "link"
   color: "blue"
-
