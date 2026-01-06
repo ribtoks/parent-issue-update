@@ -1,4 +1,4 @@
-FROM golang:1.24 as builder
+FROM golang:1.23 as builder
 
 WORKDIR /app
 COPY . /app
@@ -15,4 +15,3 @@ FROM gcr.io/distroless/static
 COPY --from=builder /app/app /app
 
 ENTRYPOINT ["/app"]
-
