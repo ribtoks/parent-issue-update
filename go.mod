@@ -2,7 +2,7 @@ module github.com/ribtoks/parent-issue-action
 
 go 1.23.0
 
-toolchain go1.23.4
+toolchain go1.26.0
 
 require (
 	github.com/google/go-github/v73 v73.0.0
